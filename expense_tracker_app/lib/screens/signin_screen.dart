@@ -12,8 +12,19 @@ class SignInScreen extends StatefulWidget {
 }
 
 class _SignInScreenState extends State<SignInScreen> {
+  final _formKey = GlobalKey<FormState>();
   final usernameController = TextEditingController();
   final passwordController = TextEditingController();
+
+  handleSignIn() {
+    if (_formKey.currentState!.validate()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Sign In Successful'),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,6 +50,7 @@ class _SignInScreenState extends State<SignInScreen> {
               ),
               child: SingleChildScrollView(
                 child: Form(
+                  key: _formKey,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
@@ -56,6 +68,12 @@ class _SignInScreenState extends State<SignInScreen> {
                       SignField(
                         controller: TextEditingController(),
                         obscureText: false,
+                        validator: (v) {
+                          if (v == null || v.isEmpty) {
+                            return 'Please enter username';
+                          }
+                          return null;
+                        },
                         label: const Text('Username'),
                         hintText: 'Enter Username',
                       ),
@@ -65,13 +83,19 @@ class _SignInScreenState extends State<SignInScreen> {
                       SignField(
                         controller: TextEditingController(),
                         obscureText: true,
+                        validator: (v) {
+                          if (v == null || v.isEmpty) {
+                            return 'Please enter password';
+                          }
+                          return null;
+                        },
                         label: const Text('Password'),
                         hintText: 'Enter Password',
                       ),
                       const SizedBox(
                         height: 50.0,
                       ),
-                      SignButton(onTap: () {}, text: "Sign In"),
+                      SignButton(onTap: handleSignIn, text: "Sign In"),
                       const SizedBox(
                         height: 50.0,
                       ),

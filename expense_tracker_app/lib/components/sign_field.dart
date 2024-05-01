@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 class SignField extends StatelessWidget {
   final TextEditingController controller;
   final bool obscureText;
+  final String? Function(String?)? validator;
   final Widget label;
   final String hintText;
 
@@ -10,15 +11,17 @@ class SignField extends StatelessWidget {
     super.key,
     required this.controller,
     required this.obscureText,
+    required this.validator,
     required this.label,
     required this.hintText,
   });
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
+    return TextFormField(
       controller: controller,
       obscureText: obscureText,
+      validator: validator,
       decoration: InputDecoration(
         label: label,
         hintText: hintText,

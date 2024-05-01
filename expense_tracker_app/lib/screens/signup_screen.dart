@@ -12,9 +12,20 @@ class SignUpScreen extends StatefulWidget {
 }
 
 class _SignUpScreenState extends State<SignUpScreen> {
+  final _formKey = GlobalKey<FormState>();
   final usernameController = TextEditingController();
   final passwordController = TextEditingController();
   final passwordConfirmController = TextEditingController();
+
+  handleSignUp() {
+    if (_formKey.currentState!.validate()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Sign Up Successful'),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,6 +51,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
               ),
               child: SingleChildScrollView(
                 child: Form(
+                  key: _formKey,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
@@ -57,6 +69,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       SignField(
                           controller: usernameController,
                           obscureText: false,
+                          validator: (v) {
+                            if (v == null || v.isEmpty) {
+                              return 'Username is required';
+                            }
+                            return null;
+                          },
                           label: const Text("Username"),
                           hintText: "Enter Username"),
                       const SizedBox(
@@ -65,6 +83,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       SignField(
                         controller: passwordController,
                         obscureText: true,
+                        validator: (v) {
+                          if (v == null || v.isEmpty) {
+                            return 'Password is required';
+                          }
+                          return null;
+                        },
                         label: const Text('Password'),
                         hintText: 'Enter Password',
                       ),
@@ -74,13 +98,22 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       SignField(
                         controller: passwordConfirmController,
                         obscureText: true,
+                        validator: (v) {
+                          if (v == null || v.isEmpty) {
+                            return 'Password is required';
+                          }
+                          if (v != passwordController.text) {
+                            return 'Passwords do not match';
+                          }
+                          return null;
+                        },
                         label: const Text('Confirm Password'),
                         hintText: 'Confirm Password',
                       ),
                       const SizedBox(
                         height: 50.0,
                       ),
-                      SignButton(onTap: () {}, text: "Sign Up"),
+                      SignButton(onTap: handleSignUp, text: "Sign Up"),
                       const SizedBox(
                         height: 50.0,
                       ),
