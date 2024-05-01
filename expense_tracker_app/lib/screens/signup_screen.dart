@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+import 'package:expense_tracker_app/api/auth.dart';
 import 'package:expense_tracker_app/components/sign_button.dart';
 import 'package:expense_tracker_app/components/sign_field.dart';
 import 'package:expense_tracker_app/screens/signin_screen.dart';
@@ -17,13 +20,51 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final passwordController = TextEditingController();
   final passwordConfirmController = TextEditingController();
 
-  handleSignUp() {
+  handleSignUp() async {
+    String username = usernameController.text;
+    String password = passwordController.text;
+    String passwordConfirm = passwordConfirmController.text;
+
     if (_formKey.currentState!.validate()) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Sign Up Successful'),
-        ),
-      );
+      if (password == passwordConfirm) {
+        Map<String, dynamic> body = {
+          "username": username,
+          "password": password,
+        };
+
+        final res = jsonDecode((await AuthApi.post(body, "signup")).body);
+        if (res["status"] == "200") {
+          if (mounted) {
+            Navigator.popUntil(
+              context,
+              ModalRoute.withName('/'),
+            );
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(res["msg"]), // signup successful
+              ),
+            );
+            return;
+          }
+        } else if (res["status"] == "400") {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(res["msg"]), // username already exists
+              ),
+            );
+            return;
+          }
+          return;
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Passwords do not match'),
+          ),
+        );
+        return;
+      }
     }
   }
 

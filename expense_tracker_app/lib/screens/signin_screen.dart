@@ -1,3 +1,8 @@
+import 'dart:convert';
+import 'package:expense_tracker_app/screens/app/home_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'package:expense_tracker_app/api/auth.dart';
 import 'package:expense_tracker_app/components/sign_button.dart';
 import 'package:expense_tracker_app/components/sign_field.dart';
 import 'package:expense_tracker_app/screens/signup_screen.dart';
@@ -16,13 +21,54 @@ class _SignInScreenState extends State<SignInScreen> {
   final usernameController = TextEditingController();
   final passwordController = TextEditingController();
 
-  handleSignIn() {
-    if (_formKey.currentState!.validate()) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Sign In Successful'),
-        ),
-      );
+  void handleSignIn() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String username = usernameController.text;
+    String password = passwordController.text;
+
+    try {
+      if (_formKey.currentState!.validate()) {
+        Map<String, dynamic> body = {
+          "username": username,
+          "password": password,
+        };
+
+        final res = jsonDecode((await AuthApi.post(body, "signin")).body);
+        if (res["status"] == "200") {
+          await prefs.setString("token", res["token"]);
+          if (mounted) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const HomeScreen()),
+            );
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(res["msg"]), // signin successful
+              ),
+            );
+            return;
+          }
+          return;
+        } else if (res["status"] == "400") {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(res["msg"]), // invalid username or password
+              ),
+            );
+            return;
+          }
+        }
+        return;
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString()),
+          ),
+        );
+      }
     }
   }
 
@@ -66,7 +112,7 @@ class _SignInScreenState extends State<SignInScreen> {
                         height: 40.0,
                       ),
                       SignField(
-                        controller: TextEditingController(),
+                        controller: usernameController,
                         obscureText: false,
                         validator: (v) {
                           if (v == null || v.isEmpty) {
@@ -81,7 +127,7 @@ class _SignInScreenState extends State<SignInScreen> {
                         height: 25.0,
                       ),
                       SignField(
-                        controller: TextEditingController(),
+                        controller: passwordController,
                         obscureText: true,
                         validator: (v) {
                           if (v == null || v.isEmpty) {
