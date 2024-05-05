@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using api.Contexts;
 using api.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -68,6 +67,21 @@ namespace api.Controllers
             }
 
             return Ok(userInDb);
+        }
+
+        [HttpPut("{id}")] // Update a user
+        public async Task<IActionResult> UpdateUser(int id, User user)
+        {
+            if (id != user.Id)
+            {
+                return BadRequest();
+            }
+
+            _context.Entry(user).State = EntityState.Modified;
+
+            await _context.SaveChangesAsync();
+
+            return NoContent();
         }
 
         [HttpDelete("{id}")] // Delete a user
