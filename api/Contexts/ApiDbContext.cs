@@ -8,5 +8,6 @@ namespace api.Contexts
         public ApiDbContext(DbContextOptions<ApiDbContext> options) : base(options) { }
 
         public DbSet<User> Users { get; set; }
+        public DbSet<Expense> Expenses { get; set; }
     }
 }
