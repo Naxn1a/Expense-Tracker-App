@@ -1,4 +1,4 @@
-using api.Contexts;
+using api.Context;
 using api.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -16,13 +16,13 @@ namespace api.Controllers
             _context = context;
         }
 
-        [HttpGet] // Get all users
+        [HttpGet]
         public async Task<ActionResult<IEnumerable<User>>> GetUsers()
         {
             return await _context.Users.ToListAsync();
         }
 
-        [HttpGet("{id}")] // Get a user by id
+        [HttpGet("{id}")]
         public async Task<ActionResult<User>> GetUser(int id)
         {
             var user = await _context.Users.FindAsync(id);
@@ -35,42 +35,28 @@ namespace api.Controllers
             return Ok(user);
         }
 
-        [HttpPost("signup")] // Create a new user
-        public async Task<ActionResult<User>> SignUp(User user)
+        [HttpPost("Signup")]
+        public async Task<ActionResult<User>> Signup(User user)
         {
-            string hashedPassword = BCrypt.Net.BCrypt.HashPassword(user.Password);
-
-            _context.Users.Add(new User
-            {
-                Username = user.Username,
-                Password = hashedPassword
-            });
+            _context.Users.Add(user);
 
             await _context.SaveChangesAsync();
 
             return CreatedAtAction(nameof(GetUser), new { id = user.Id }, user);
         }
 
-        [HttpPost("signin")] // Sign in
-        public async Task<ActionResult<User>> SignIn(User user)
+        [HttpPost("Signin")]
+        public async Task<ActionResult<User>> Signin(User user)
         {
-            var userInDb = await _context.Users.FirstOrDefaultAsync(u => u.Username == user.Username);
+            _context.Users.Add(user);
 
-            if (userInDb == null)
-            {
-                return NotFound();
-            }
+            await _context.SaveChangesAsync();
 
-            if (!BCrypt.Net.BCrypt.Verify(user.Password, userInDb.Password))
-            {
-                return Unauthorized();
-            }
-
-            return Ok(userInDb);
+            return CreatedAtAction(nameof(GetUser), new { id = user.Id }, user);
         }
 
-        [HttpPut("{id}")] // Update a user
-        public async Task<IActionResult> UpdateUser(int id, User user)
+        [HttpPut("{id}")]
+        public async Task<ActionResult> UpdateUser(int id, User user)
         {
             if (id != user.Id)
             {
@@ -79,13 +65,26 @@ namespace api.Controllers
 
             _context.Entry(user).State = EntityState.Modified;
 
-            await _context.SaveChangesAsync();
-
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!UserExists(id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
             return NoContent();
         }
 
-        [HttpDelete("{id}")] // Delete a user
-        public async Task<IActionResult> DeleteUser(int id)
+        [HttpDelete("{id}")]
+        public async Task<ActionResult> DeleteUser(int id)
         {
             var user = await _context.Users.FindAsync(id);
 
@@ -99,6 +98,12 @@ namespace api.Controllers
             await _context.SaveChangesAsync();
 
             return NoContent();
+
+        }
+
+        private bool UserExists(int id)
+        {
+            return _context.Users.Any(e => e.Id == id);
         }
     }
 }

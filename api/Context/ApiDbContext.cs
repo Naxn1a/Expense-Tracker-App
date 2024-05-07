@@ -1,13 +1,12 @@
 using api.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace api.Contexts
+namespace api.Context
 {
     public class ApiDbContext : DbContext
     {
         public ApiDbContext(DbContextOptions<ApiDbContext> options) : base(options) { }
-
-        public DbSet<User> Users { get; set; }
-        public DbSet<Expense> Expenses { get; set; }
+        
+        public DbSet<User> Users { get; set; } = null!;
     }
 }
