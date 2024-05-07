@@ -6,7 +6,8 @@ class AuthApi {
   static Future<http.Response> post(
       Map<String, dynamic> body, String path) async {
     await dotenv.load(fileName: ".env");
-    final baseUrl = dotenv.env['BASEURL'] ?? "http://localhost:3000";
+    final baseUrl =
+        dotenv.env['BASEURL'] ?? "http://localhost:${dotenv.env['PORT']}";
 
     final url = Uri.parse("$baseUrl/$path");
     final headers = <String, String>{'Content-Type': 'application/json'};
