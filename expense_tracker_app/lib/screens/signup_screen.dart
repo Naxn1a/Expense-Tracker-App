@@ -32,27 +32,23 @@ class _SignUpScreenState extends State<SignUpScreen> {
           "password": password,
         };
 
-        final res = jsonDecode((await AuthApi.post(body, "signup")).body);
-        if (res["status"] == "200") {
+        final res = jsonDecode((await AuthApi.post(body, "users/signup")).body);
+        if (res["status"] == 200) {
           if (mounted) {
             Navigator.popUntil(
               context,
               ModalRoute.withName('/'),
             );
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(res["msg"]), // signup successful
-              ),
-            );
+            showDialog(
+                context: context,
+                builder: (context) => AlertDialog(title: Text(res["msg"])));
             return;
           }
-        } else if (res["status"] == "400") {
+        } else if (res["status"] == 400) {
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(res["msg"]), // username already exists
-              ),
-            );
+            showDialog(
+                context: context,
+                builder: (context) => AlertDialog(title: Text(res["msg"])));
             return;
           }
           return;

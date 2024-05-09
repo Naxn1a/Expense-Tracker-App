@@ -33,29 +33,25 @@ class _SignInScreenState extends State<SignInScreen> {
           "password": password,
         };
 
-        final res = jsonDecode((await AuthApi.post(body, "signin")).body);
-        if (res["status"] == "200") {
+        final res = jsonDecode((await AuthApi.post(body, "users/signin")).body);
+        if (res["status"] == 200) {
           await prefs.setString("token", res["token"]);
           if (mounted) {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (context) => const HomeScreen()),
             );
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(res["msg"]), // signin successful
-              ),
-            );
+            showDialog(
+                context: context,
+                builder: (context) => AlertDialog(title: Text(res["msg"])));
             return;
           }
           return;
-        } else if (res["status"] == "400") {
+        } else if (res["status"] == 400) {
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(res["msg"]), // invalid username or password
-              ),
-            );
+            showDialog(
+                context: context,
+                builder: (context) => AlertDialog(title: Text(res["msg"])));
             return;
           }
         }

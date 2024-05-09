@@ -35,7 +35,7 @@ func SetupRoutes(r *fiber.App, db *gorm.DB) {
 			return c.JSON(fiber.Map{"status": 400, "msg": "Username already exists"})
 		}
 
-		return c.JSON(fiber.Map{"status": 200})
+		return c.JSON(fiber.Map{"status": 200, "msg": "User created successfully"})
 	})
 
 	r.Post("/api/users/signin", func(c *fiber.Ctx) error {

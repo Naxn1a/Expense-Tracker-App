@@ -9,7 +9,7 @@ class AuthApi {
     final baseUrl =
         dotenv.env['BASEURL'] ?? "http://localhost:${dotenv.env['PORT']}";
 
-    final url = Uri.parse("$baseUrl/$path");
+    final url = Uri.parse("$baseUrl/api/$path");
     final headers = <String, String>{'Content-Type': 'application/json'};
     final encodedBody = json.encode(body);
 
