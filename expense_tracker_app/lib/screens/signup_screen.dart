@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:expense_tracker_app/api/auth.dart';
+import 'package:expense_tracker_app/api/api.dart';
 import 'package:expense_tracker_app/components/sign_button.dart';
 import 'package:expense_tracker_app/components/sign_field.dart';
 import 'package:expense_tracker_app/screens/signin_screen.dart';
@@ -32,7 +32,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           "password": password,
         };
 
-        final res = jsonDecode((await AuthApi.post(body, "users/signup")).body);
+        final res = jsonDecode((await methodPost(body, "users/signup")).body);
         if (res["status"] == 200) {
           if (mounted) {
             Navigator.popUntil(

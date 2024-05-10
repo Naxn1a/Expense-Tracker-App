@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:expense_tracker_app/screens/app/home_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:expense_tracker_app/api/auth.dart';
+import 'package:expense_tracker_app/api/api.dart';
 import 'package:expense_tracker_app/components/sign_button.dart';
 import 'package:expense_tracker_app/components/sign_field.dart';
 import 'package:expense_tracker_app/screens/signup_screen.dart';
@@ -33,7 +33,7 @@ class _SignInScreenState extends State<SignInScreen> {
           "password": password,
         };
 
-        final res = jsonDecode((await AuthApi.post(body, "users/signin")).body);
+        final res = jsonDecode((await methodPost(body, "users/signin")).body);
         if (res["status"] == 200) {
           await prefs.setString("token", res["token"]);
           if (mounted) {
@@ -41,9 +41,6 @@ class _SignInScreenState extends State<SignInScreen> {
               context,
               MaterialPageRoute(builder: (context) => const HomeScreen()),
             );
-            showDialog(
-                context: context,
-                builder: (context) => AlertDialog(title: Text(res["msg"])));
             return;
           }
           return;
