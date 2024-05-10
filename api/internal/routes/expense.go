@@ -1,60 +1,76 @@
 package routes
 
 import (
-	"log"
+	"strconv"
 
+	"github.com/expense-tracker/internal/handlers"
 	"github.com/expense-tracker/internal/models"
+	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 )
 
-func GetExpenses(db *gorm.DB) []models.Expense {
-	var expenses []models.Expense
-	result := db.Find(&expenses)
+func ExpenseRoutes(r *fiber.App, db *gorm.DB) {
+	r.Get("/api/expenses", func(c *fiber.Ctx) error {
+		return c.JSON(handlers.GetExpenses(db))
+	})
 
-	if result.Error != nil {
-		log.Fatalf("Error fetching expenses: %v", result.Error)
-	}
+	r.Get("/api/expenses/:id", func(c *fiber.Ctx) error {
+		id, err := strconv.Atoi(c.Params("id"))
+		if err != nil {
+			return c.SendStatus(fiber.StatusBadRequest)
+		}
+		return c.JSON(handlers.GetExpense(db, id))
+	})
 
-	return expenses
-}
+	r.Post("/api/expenses", func(c *fiber.Ctx) error {
+		expense := new(models.Expense)
 
-func GetExpense(db *gorm.DB, id int) models.Expense {
-	var expense models.Expense
-	result := db.First(&expense, id)
+		if err := c.BodyParser(expense); err != nil {
+			return c.SendStatus(fiber.StatusBadRequest)
+		}
 
-	if result.Error != nil {
-		log.Fatalf("Error fetching expense: %v", result.Error)
-	}
+		err := handlers.CreateExpense(db, expense)
 
-	return expense
-}
+		if err != nil {
+			return c.JSON(fiber.Map{"status": 400, "msg": "Error creating expense"})
+		}
 
-func CreateExpense(db *gorm.DB, expense *models.Expense) error {
-	result := db.Create(expense)
+		return c.JSON(fiber.Map{"status": 200, "msg": "Expense created successfully"})
+	})
 
-	if result.Error != nil {
-		return result.Error
-	}
+	r.Put("/api/expenses/:id", func(c *fiber.Ctx) error {
+		id, err := strconv.Atoi(c.Params("id"))
+		if err != nil {
+			return c.SendStatus(fiber.StatusBadRequest)
+		}
 
-	return nil
-}
+		expense := new(models.Expense)
 
-func UpdateExpense(db *gorm.DB, id int, expense *models.Expense) error {
-	result := db.Model(&models.Expense{}).Where("id = ?", id).Updates(expense)
+		if err := c.BodyParser(expense); err != nil {
+			return c.SendStatus(fiber.StatusBadRequest)
+		}
 
-	if result.Error != nil {
-		return result.Error
-	}
+		err = handlers.UpdateExpense(db, id, expense)
 
-	return nil
-}
+		if err != nil {
+			return c.JSON(fiber.Map{"status": 400, "msg": "Error updating expense"})
+		}
 
-func DeleteExpense(db *gorm.DB, id int) error {
-	result := db.Delete(&models.Expense{}, id)
+		return c.JSON(fiber.Map{"status": 200, "msg": "Expense updated successfully"})
+	})
 
-	if result.Error != nil {
-		return result.Error
-	}
+	r.Delete("/api/expenses/:id", func(c *fiber.Ctx) error {
+		id, err := strconv.Atoi(c.Params("id"))
+		if err != nil {
+			return c.SendStatus(fiber.StatusBadRequest)
+		}
 
-	return nil
+		err = handlers.DeleteExpense(db, id)
+
+		if err != nil {
+			return c.JSON(fiber.Map{"status": 400, "msg": "Error deleting expense"})
+		}
+
+		return c.JSON(fiber.Map{"status": 200, "msg": "Expense deleted successfully"})
+	})
 }

@@ -10,27 +10,53 @@ import (
 	"gorm.io/gorm"
 )
 
+func Authen(db *gorm.DB, t string) (*jwt.Token, error) {
+	secretKey := os.Getenv("JWT_SECRET_KEY")
+
+	token, err := jwt.ParseWithClaims(t, jwt.MapClaims{}, func(token *jwt.Token) (interface{}, error) {
+		return []byte(secretKey), nil
+	})
+
+	return token, err
+}
+
 func GetUsers(db *gorm.DB) []models.User {
 	var users []models.User
-	result := db.Find(&users)
 
-	if result.Error != nil {
-		log.Fatalf("Error fetching user: %v", result.Error)
+	err := db.Model(&models.User{}).Preload("Expense").Find(&users).Error
+
+	if err != nil {
+		log.Fatalf("Error fetching user: %v", err)
 	}
 
 	return users
 }
 
-func GetUser(db *gorm.DB, id int) models.User {
+// make getuser by username
+func GetUser(db *gorm.DB, username string) models.User {
 	var user models.User
-	result := db.First(&user, id)
+
+	result := db.Where("username = ?", username).First(&user)
 
 	if result.Error != nil {
 		log.Fatalf("Error fetching user: %v", result.Error)
 	}
 
 	return user
+
 }
+
+// func GetUser(db *gorm.DB, id int) models.User {
+// 	var user models.User
+
+// 	result := db.First(&user, id)
+
+// 	if result.Error != nil {
+// 		log.Fatalf("Error fetching user: %v", result.Error)
+// 	}
+
+// 	return user
+// }
 
 func SignUpUser(db *gorm.DB, user *models.User) error {
 	hashPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
@@ -68,6 +94,7 @@ func SignInUser(db *gorm.DB, user *models.User) (string, error) {
 	secretKey := os.Getenv("JWT_SECRET_KEY")
 	token := jwt.New(jwt.SigningMethodHS256)
 	claims := token.Claims.(jwt.MapClaims)
+	claims["id"] = selectedUser.ID
 	claims["username"] = selectedUser.Username
 
 	t, err := token.SignedString([]byte(secretKey))

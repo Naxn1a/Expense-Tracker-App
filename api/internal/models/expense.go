@@ -8,8 +8,8 @@ import (
 
 type Expense struct {
 	gorm.Model
-	List   string    `json:"name"`
+	Title  string    `json:"title"`
 	Amount float64   `json:"amount"`
 	Date   time.Time `json:"date"`
-	UserId uint      `json:"user_id"`
+	UserID uint      `json:"user_id"`
 }

@@ -12,7 +12,8 @@ func Run(db *gorm.DB) {
 
 	app.Use(cors.New())
 
-	routes.SetupRoutes(app, db)
+	routes.UserRoutes(app, db)
+	routes.ExpenseRoutes(app, db)
 
 	app.Listen(":8080")
 }
