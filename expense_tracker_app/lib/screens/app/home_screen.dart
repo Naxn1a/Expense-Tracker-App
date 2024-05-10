@@ -30,6 +30,11 @@ class _HomeScreenState extends State<HomeScreen> {
     userId = res["data"]["id"];
   }
 
+  @override
+  void initState() {
+    super.initState();
+  }
+
   void openNewExpenseBox() async {
     if (mounted) {
       showDialog(
@@ -96,7 +101,9 @@ class _HomeScreenState extends State<HomeScreen> {
           };
 
           final res = jsonDecode((await methodPost(body, "expenses")).body);
-          if (res['status']) {}
+          if (res['status'] == 200) {
+            print(res);
+          }
 
           titleController.clear();
           amountController.clear();

@@ -1,68 +1,74 @@
 package handlers
 
 import (
-	"log"
 	"os"
+	"strconv"
 
 	"github.com/expense-tracker/internal/models"
+	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v4"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
-func Authen(db *gorm.DB, t string) (*jwt.Token, error) {
+func Authen(db *gorm.DB, c *fiber.Ctx) error {
+	jwtToken := c.Params("token")
 	secretKey := os.Getenv("JWT_SECRET_KEY")
 
-	token, err := jwt.ParseWithClaims(t, jwt.MapClaims{}, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(jwtToken, jwt.MapClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(secretKey), nil
 	})
 
-	return token, err
+	if err != nil {
+		return c.SendStatus(fiber.StatusUnauthorized)
+	}
+
+	claim := token.Claims.(jwt.MapClaims)
+
+	return c.JSON(fiber.Map{"status": 200, "data": claim})
 }
 
-func GetUsers(db *gorm.DB) []models.User {
+func GetUsers(db *gorm.DB, c *fiber.Ctx) error {
 	var users []models.User
 
 	err := db.Model(&models.User{}).Preload("Expense").Find(&users).Error
 
 	if err != nil {
-		log.Fatalf("Error fetching user: %v", err)
+		return c.SendStatus(fiber.StatusInternalServerError)
 	}
 
-	return users
+	return c.JSON(users)
 }
 
-// make getuser by username
-func GetUser(db *gorm.DB, username string) models.User {
+func GetUser(db *gorm.DB, c *fiber.Ctx) error {
+	id, err := strconv.Atoi(c.Params("id"))
+
+	if err != nil {
+		return c.SendStatus(fiber.StatusBadRequest)
+	}
+
 	var user models.User
 
-	result := db.Where("username = ?", username).First(&user)
+	result := db.First(&user, id)
 
 	if result.Error != nil {
-		log.Fatalf("Error fetching user: %v", result.Error)
+		return c.SendStatus(fiber.StatusNotFound)
 	}
 
-	return user
-
+	return c.JSON(user)
 }
 
-// func GetUser(db *gorm.DB, id int) models.User {
-// 	var user models.User
+func SignUpUser(db *gorm.DB, c *fiber.Ctx) error {
+	user := new(models.User)
 
-// 	result := db.First(&user, id)
+	if err := c.BodyParser(user); err != nil {
+		return c.SendStatus(fiber.StatusBadRequest)
+	}
 
-// 	if result.Error != nil {
-// 		log.Fatalf("Error fetching user: %v", result.Error)
-// 	}
-
-// 	return user
-// }
-
-func SignUpUser(db *gorm.DB, user *models.User) error {
 	hashPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 
 	if err != nil {
-		return err
+		return c.SendStatus(fiber.StatusInternalServerError)
 	}
 
 	user.Password = string(hashPassword)
@@ -70,58 +76,80 @@ func SignUpUser(db *gorm.DB, user *models.User) error {
 	result := db.Create(user)
 
 	if result.Error != nil {
-		return result.Error
+		return c.JSON(fiber.Map{"status": 500, "msg": "User already exists"})
 	}
 
-	return nil
+	return c.JSON(fiber.Map{"status": 200, "msg": "User created successfully"})
 }
 
-func SignInUser(db *gorm.DB, user *models.User) (string, error) {
-	selectedUser := new(models.User)
+func SignInUser(db *gorm.DB, c *fiber.Ctx) error {
+	user := new(models.User)
+	newUser := new(models.User)
 
-	result := db.Where("username = ?", user.Username).First(selectedUser)
-
-	if result.Error != nil {
-		return "", result.Error
+	if err := c.BodyParser(user); err != nil {
+		return c.SendStatus(fiber.StatusBadRequest)
 	}
 
-	err := bcrypt.CompareHashAndPassword([]byte(selectedUser.Password), []byte(user.Password))
+	result := db.Where("username = ?", user.Username).First(newUser)
+
+	if result.Error != nil {
+		return c.JSON(fiber.Map{"status": 500, "msg": "User not found"})
+	}
+
+	err := bcrypt.CompareHashAndPassword([]byte(newUser.Password), []byte(user.Password))
 
 	if err != nil {
-		return "", err
+		return c.SendStatus(fiber.StatusUnauthorized)
 	}
 
 	secretKey := os.Getenv("JWT_SECRET_KEY")
 	token := jwt.New(jwt.SigningMethodHS256)
 	claims := token.Claims.(jwt.MapClaims)
-	claims["id"] = selectedUser.ID
-	claims["username"] = selectedUser.Username
+	claims["id"] = newUser.ID
 
 	t, err := token.SignedString([]byte(secretKey))
 
 	if err != nil {
-		return "", err
+		return c.SendStatus(fiber.StatusInternalServerError)
 	}
 
-	return t, nil
+	return c.JSON(fiber.Map{"status": 200, "token": t})
 }
 
-func UpdateUser(db *gorm.DB, id int, user *models.User) error {
+func UpdateUser(db *gorm.DB, c *fiber.Ctx) error {
+	id, err := strconv.Atoi(c.Params("id"))
+
+	if err != nil {
+		return c.SendStatus(fiber.StatusBadRequest)
+	}
+
+	user := new(models.User)
+
+	if err := c.BodyParser(user); err != nil {
+		return c.SendStatus(fiber.StatusBadRequest)
+	}
+
 	result := db.Model(&models.User{}).Where("id = ?", id).Updates(user)
 
 	if result.Error != nil {
-		return result.Error
+		return c.SendStatus(fiber.StatusInternalServerError)
 	}
 
-	return nil
+	return c.JSON(fiber.Map{"status": 200, "msg": "User updated successfully"})
 }
 
-func DeleteUser(db *gorm.DB, id int) error {
+func DeleteUser(db *gorm.DB, c *fiber.Ctx) error {
+	id, err := strconv.Atoi(c.Params("id"))
+
+	if err != nil {
+		return c.SendStatus(fiber.StatusBadRequest)
+	}
+
 	result := db.Delete(&models.User{}, id)
 
 	if result.Error != nil {
-		return result.Error
+		return c.SendStatus(fiber.StatusInternalServerError)
 	}
 
-	return nil
+	return c.SendStatus(fiber.StatusOK)
 }

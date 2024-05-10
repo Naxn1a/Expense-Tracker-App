@@ -33,33 +33,32 @@ class _SignUpScreenState extends State<SignUpScreen> {
         };
 
         final res = jsonDecode((await methodPost(body, "users/signup")).body);
-        if (res["status"] == 200) {
-          if (mounted) {
-            Navigator.popUntil(
-              context,
-              ModalRoute.withName('/'),
-            );
-            showDialog(
-                context: context,
-                builder: (context) => AlertDialog(title: Text(res["msg"])));
-            return;
-          }
-        } else if (res["status"] == 400) {
-          if (mounted) {
-            showDialog(
-                context: context,
-                builder: (context) => AlertDialog(title: Text(res["msg"])));
-            return;
-          }
+        if (mounted) {
+          Navigator.popUntil(
+            context,
+            ModalRoute.withName('/'),
+          );
+          showDialog(
+              context: context,
+              builder: (context) => AlertDialog(title: Text(res["msg"])));
           return;
+        } else {
+          if (mounted) {
+            showDialog(
+                context: context,
+                builder: (context) => AlertDialog(title: Text(res["msg"])));
+            return;
+          } else {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Passwords do not match'),
+                ),
+              );
+              return;
+            }
+          }
         }
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Passwords do not match'),
-          ),
-        );
-        return;
       }
     }
   }

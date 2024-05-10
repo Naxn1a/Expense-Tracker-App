@@ -1,4 +1,3 @@
-import 'package:expense_tracker_app/screens/app/home_screen.dart';
 import 'package:expense_tracker_app/screens/main_screen.dart';
 import 'package:expense_tracker_app/screens/signin_screen.dart';
 import 'package:expense_tracker_app/screens/signup_screen.dart';
