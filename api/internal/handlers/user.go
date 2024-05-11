@@ -11,15 +11,19 @@ import (
 	"gorm.io/gorm"
 )
 
+type Token struct {
+	Token string `json:"token"`
+}
+
 func Authen(db *gorm.DB, c *fiber.Ctx) error {
 	secretKey := os.Getenv("JWT_SECRET_KEY")
-	jwtToken := c.Body()
+	req := new(Token)
 
-	if err := c.BodyParser(jwtToken); err != nil {
+	if err := c.BodyParser(req); err != nil {
 		return c.JSON(fiber.Map{"status": 400, "msg": "Invalid request"})
 	}
 
-	token, err := jwt.ParseWithClaims(string(jwtToken), jwt.MapClaims{}, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(req.Token, jwt.MapClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(secretKey), nil
 	})
 

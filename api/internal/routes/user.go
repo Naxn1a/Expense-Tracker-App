@@ -7,7 +7,7 @@ import (
 )
 
 func UserRoutes(r *fiber.App, db *gorm.DB) {
-	r.Get("/api/auth", func(c *fiber.Ctx) error {
+	r.Post("/api/auth", func(c *fiber.Ctx) error {
 		return handlers.Authen(db, c)
 	})
 
