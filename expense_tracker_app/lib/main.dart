@@ -19,16 +19,6 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // final token = fetchToken().toString();
-    // if (token.isNotEmpty) {
-    //   return MaterialApp(
-    //     debugShowCheckedModeBanner: false,
-    //     initialRoute: "/",
-    //     routes: {
-    //       "/": (context) => const HomeScreen(),
-    //     },
-    //   );
-    // }
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       initialRoute: "/",

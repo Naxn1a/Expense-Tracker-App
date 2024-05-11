@@ -27,9 +27,9 @@ func GetExpense(db *gorm.DB, c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{"status": 400, "msg": "Invalid expense id"})
 	}
 
-	var expense models.Expense
+	var expense []models.Expense
 
-	result := db.First(&expense, id)
+	result := db.Where("user_id = ?", id).Find(&expense)
 
 	if result.Error != nil {
 		return c.JSON(fiber.Map{"status": 400, "msg": "Expense not found"})

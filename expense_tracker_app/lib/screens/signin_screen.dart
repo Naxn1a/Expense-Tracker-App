@@ -1,5 +1,4 @@
-import 'dart:convert';
-import 'package:expense_tracker_app/screens/app/home_screen.dart';
+import 'package:expense_tracker_app/screens/app/dashboard_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:expense_tracker_app/api/api.dart';
@@ -33,13 +32,13 @@ class _SignInScreenState extends State<SignInScreen> {
           "password": password,
         };
 
-        final res = jsonDecode((await methodPost(body, "users/signin")).body);
+        final res = await methodPost(body, "users/signin");
         if (res["status"] == 200) {
           await prefs.setString("token", res["token"]);
           if (mounted) {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => const HomeScreen()),
+              MaterialPageRoute(builder: (context) => const DashboardScreen()),
             );
             return;
           }
