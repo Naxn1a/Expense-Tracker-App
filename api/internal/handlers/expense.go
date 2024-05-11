@@ -14,7 +14,7 @@ func GetExpenses(db *gorm.DB, c *fiber.Ctx) error {
 	result := db.Find(&expenses)
 
 	if result.Error != nil {
-		return c.SendStatus(fiber.StatusInternalServerError)
+		return c.JSON(fiber.Map{"status": 400, "msg": "Error fetching expenses"})
 	}
 
 	return c.JSON(expenses)
@@ -24,7 +24,7 @@ func GetExpense(db *gorm.DB, c *fiber.Ctx) error {
 	id, err := strconv.Atoi(c.Params("id"))
 
 	if err != nil {
-		return c.SendStatus(fiber.StatusBadRequest)
+		return c.JSON(fiber.Map{"status": 400, "msg": "Invalid expense id"})
 	}
 
 	var expense models.Expense
@@ -32,7 +32,7 @@ func GetExpense(db *gorm.DB, c *fiber.Ctx) error {
 	result := db.First(&expense, id)
 
 	if result.Error != nil {
-		return c.SendStatus(fiber.StatusNotFound)
+		return c.JSON(fiber.Map{"status": 400, "msg": "Expense not found"})
 	}
 
 	return c.JSON(expense)
@@ -42,7 +42,7 @@ func CreateExpense(db *gorm.DB, c *fiber.Ctx) error {
 	expense := new(models.Expense)
 
 	if err := c.BodyParser(expense); err != nil {
-		return c.SendStatus(fiber.StatusBadRequest)
+		return c.JSON(fiber.Map{"status": 400, "msg": "Error parsing expense"})
 	}
 
 	result := db.Create(expense)
@@ -58,13 +58,13 @@ func UpdateExpense(db *gorm.DB, c *fiber.Ctx) error {
 	id, err := strconv.Atoi(c.Params("id"))
 
 	if err != nil {
-		return c.SendStatus(fiber.StatusBadRequest)
+		return c.JSON(fiber.Map{"status": 400, "msg": "Invalid expense id"})
 	}
 
 	expense := new(models.Expense)
 
 	if err := c.BodyParser(expense); err != nil {
-		return c.SendStatus(fiber.StatusBadRequest)
+		return c.JSON(fiber.Map{"status": 400, "msg": "Error parsing expense"})
 	}
 
 	result := db.Model(&models.Expense{}).Where("id = ?", id).Updates(expense)
@@ -80,7 +80,7 @@ func DeleteExpense(db *gorm.DB, c *fiber.Ctx) error {
 	id, err := strconv.Atoi(c.Params("id"))
 
 	if err != nil {
-		return c.SendStatus(fiber.StatusBadRequest)
+		return c.JSON(fiber.Map{"status": 400, "msg": "Invalid expense id"})
 	}
 
 	result := db.Delete(&models.Expense{}, id)
