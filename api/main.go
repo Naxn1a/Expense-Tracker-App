@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"os"
 
 	"github.com/expense-tracker/configs"
@@ -12,7 +11,7 @@ import (
 func main() {
 	cfg := configs.LoadConfigs(func() string {
 		if len(os.Args) < 2 {
-			log.Fatal("Please provide a path to the .env file") // go run main.go .env
+			return ".env"
 		}
 		return os.Args[1]
 	}())

@@ -1,5 +1,7 @@
 import 'package:expense_tracker_app/api/api.dart';
+import 'package:expense_tracker_app/components/user_card.dart';
 import 'package:expense_tracker_app/helpers/helper.dart';
+import 'package:expense_tracker_app/screens/main_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:intl/intl.dart';
@@ -18,6 +20,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   TextEditingController amountController = TextEditingController();
   var username = "";
   var userId = 0;
+  var total = 0;
+  var totalIncome = 0;
+  var totalExpense = 0;
 
   Future<dynamic> fetchData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -34,17 +39,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (res != null) {
       userId = res["data"]["id"];
     }
-    username = (await methodGet("users/$userId"))["Username"];
+    username = (await methodGet("users/$userId"))["data"]["Username"];
     return (await methodGet("expenses/$userId"));
   }
+
+  Future<dynamic> fetchTotal() async {}
 
   void logout() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.remove('token');
     if (mounted) {
-      Navigator.popUntil(
+      Navigator.pushAndRemoveUntil(
         context,
-        ModalRoute.withName('/'),
+        MaterialPageRoute(builder: (context) => const MainScreen()),
+        (route) => false,
       );
     }
   }
@@ -158,9 +166,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   );
                 }
               })),
-      body: FutureBuilder(
-        future: fetchData(),
-        builder: (context, snapshot) {
+      body: UserCard(
+        newFuture: fetchData(),
+        newBuilder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
               child: CircularProgressIndicator(),
@@ -177,18 +185,85 @@ class _DashboardScreenState extends State<DashboardScreen> {
             child: ListView.builder(
               itemCount: data.length,
               itemBuilder: (context, index) {
-                return ListTile(
-                    title: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(data[index]["title"]),
-                        Text("\$${data[index]["amount"]}"),
-                      ],
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: Container(
+                    decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(12)),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  Container(
+                                    width: 50,
+                                    height: 50,
+                                    decoration: const BoxDecoration(
+                                        color: Colors.white,
+                                        shape: BoxShape.circle),
+                                  ),
+                                  if (data[index]["type"] == "expense")
+                                    const Icon(
+                                      FontAwesome.arrow_up_solid,
+                                      color: Colors.redAccent,
+                                      size: 30,
+                                    )
+                                  else
+                                    const Icon(
+                                      FontAwesome.arrow_down_solid,
+                                      color: Colors.greenAccent,
+                                      size: 30,
+                                    ),
+                                ],
+                              ),
+                              const SizedBox(
+                                width: 12,
+                              ),
+                              Row(
+                                children: [
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(data[index]["title"],
+                                          style: const TextStyle(
+                                              fontSize: 24,
+                                              fontWeight: FontWeight.w600)),
+                                      Text(
+                                        DateFormat("dd/MM/yyyy HH:mm").format(
+                                            DateTime.parse(
+                                                data[index]["date"])),
+                                        style: const TextStyle(fontSize: 16),
+                                      )
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          if (data[index]["type"] == "expense")
+                            Text(
+                              "${data[index]["amount"].toString()} \$",
+                              style: const TextStyle(
+                                  fontSize: 24, color: Colors.red),
+                            )
+                          else
+                            Text(
+                              "+${data[index]["amount"].toString()} \$",
+                              style: const TextStyle(
+                                  fontSize: 24, color: Colors.green),
+                            ),
+                        ],
+                      ),
                     ),
-                    subtitle: Text(
-                      DateFormat("dd/MM/yyyy")
-                          .format(DateTime.parse(data[index]["date"])),
-                    ));
+                  ),
+                );
               },
             ),
           );
@@ -215,10 +290,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
         if (titleController.text.isNotEmpty &&
             amountController.text.isNotEmpty) {
           Navigator.pop(context);
-
+          final amount = convertStringToDouble(amountController.text);
           Map<String, dynamic> body = {
             "title": titleController.text,
-            "amount": convertStringToDouble(amountController.text),
+            "amount": amount,
+            "type": (amount < 0) ? "expense" : "income",
             "date":
                 DateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(DateTime.now()),
             "user_id": userId,

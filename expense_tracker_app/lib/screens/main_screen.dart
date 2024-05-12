@@ -54,7 +54,7 @@ class MainScreen extends StatelessWidget {
                       buttonText: 'Sign up',
                       onTap: const SignUpScreen(),
                       color: Colors.white,
-                      textColor: Colors.deepPurple[400],
+                      textColor: Colors.deepPurple[300],
                     ),
                   ),
                 ],

@@ -29,11 +29,14 @@ func GetExpense(db *gorm.DB, c *fiber.Ctx) error {
 
 	var expense []models.Expense
 
-	result := db.Where("user_id = ?", id).Find(&expense)
+	// result := db.Where("user_id = ?", id).Find(&expense)
+	result := db.Order("created_at desc").Where("user_id = ?", id).Find(&expense)
 
 	if result.Error != nil {
 		return c.JSON(fiber.Map{"status": 400, "msg": "Expense not found"})
 	}
+
+	// make order by
 
 	return c.JSON(expense)
 }

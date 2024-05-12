@@ -57,13 +57,35 @@ func GetUser(db *gorm.DB, c *fiber.Ctx) error {
 
 	var user models.User
 
-	result := db.First(&user, id)
+	err = db.Model(&models.User{}).Preload("Expense").First(&user, id).Error
 
-	if result.Error != nil {
+	if err != nil {
 		return c.JSON(fiber.Map{"status": 500, "msg": "User not found"})
 	}
 
-	return c.JSON(user)
+	var total = 0.0
+	var income = 0.0
+	var expense = 0.0
+
+	err = db.Model(&models.Expense{}).Where("user_id = ?", id).Select("sum(amount)").Row().Scan(&total)
+
+	if err != nil {
+		total = 0.0
+	}
+
+	err = db.Model(&models.Expense{}).Where("user_id = ? AND type = ?", id, "income").Select("sum(amount)").Row().Scan(&income)
+
+	if err != nil {
+		income = 0.0
+	}
+
+	err = db.Model(&models.Expense{}).Where("user_id = ? AND type = ?", id, "expense").Select("sum(amount)").Row().Scan(&expense)
+
+	if err != nil {
+		expense = 0.0
+	}
+
+	return c.JSON(fiber.Map{"status": 200, "data": user, "total": total, "income": income, "expense": expense})
 }
 
 func SignUpUser(db *gorm.DB, c *fiber.Ctx) error {

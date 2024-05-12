@@ -1,4 +1,4 @@
-import 'package:expense_tracker_app/screens/app/dashboard_screen.dart';
+import 'package:expense_tracker_app/screens/dashboard_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:expense_tracker_app/api/api.dart';
@@ -43,7 +43,7 @@ class _SignInScreenState extends State<SignInScreen> {
             return;
           }
           return;
-        } else if (res["status"] == 400) {
+        } else {
           if (mounted) {
             showDialog(
                 context: context,
