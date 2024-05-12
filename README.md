@@ -2,10 +2,8 @@
 Helping to record income and expenses
 
 ## Demo
-<div style="display: flex; gap: 2rem; margin: 2rem;">
-  <img src="./examples/demo01.png" alt="drawing" width="200"/>
-  <img src="./examples/demo02.png" alt="drawing" width="200"/>
-</div>
+<img src="./examples/demo01.png" alt="drawing" width="200"/>
+<img src="./examples/demo02.png" alt="drawing" width="200"/>
 
 ## Tech Stack
 - Golang
