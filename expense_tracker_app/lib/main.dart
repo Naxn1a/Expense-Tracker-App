@@ -1,3 +1,4 @@
+import 'package:expense_tracker_app/api/api.dart';
 import 'package:expense_tracker_app/screens/dashboard_screen.dart';
 import 'package:expense_tracker_app/screens/main_screen.dart';
 import 'package:expense_tracker_app/screens/signin_screen.dart';
@@ -22,6 +23,16 @@ class _MyAppState extends State<MyApp> {
   Future<dynamic> fetchToken() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('token');
+    final res = await methodPost({
+      "token": token,
+    }, "auth");
+    if (res != null) {
+      final username = (await methodGet("users/${res["data"]["id"]}"));
+      if (username["status"] == 500) {
+        prefs.remove("token");
+        return;
+      }
+    }
     if (token != null) {
       hasToken = true;
     }
@@ -40,9 +51,9 @@ class _MyAppState extends State<MyApp> {
           if (hasToken) {
             return MaterialApp(
               debugShowCheckedModeBanner: false,
-              initialRoute: "/dashboard",
+              initialRoute: "/Dashboard",
               routes: {
-                "/dashboard": (context) => const DashboardScreen(),
+                "/Dashboard": (context) => const DashboardScreen(),
               },
             );
           } else {

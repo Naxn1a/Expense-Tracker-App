@@ -162,7 +162,8 @@ func UpdateUser(db *gorm.DB, c *fiber.Ctx) error {
 	result := db.Model(&models.User{}).Where("id = ?", id).Updates(user)
 
 	if result.Error != nil {
-		return c.JSON(fiber.Map{"status": 500, "msg": "Failed to update user"})
+		// return c.JSON(fiber.Map{"status": 500, "msg": "Failed to update user"})
+		return c.JSON(fiber.Map{"status": 500, "msg": "Username already exists"})
 	}
 
 	return c.JSON(fiber.Map{"status": 200, "msg": "User updated successfully"})

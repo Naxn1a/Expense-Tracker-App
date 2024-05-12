@@ -7,18 +7,15 @@ Future<dynamic> makeHttpRequest(method, body, path, http) async {
   final baseUrl = dotenv.env['BASEURL'] ?? "http://localhost:8080}";
   final headers = <String, String>{'Content-Type': 'application/json'};
   final url = Uri.parse("$baseUrl/api/$path");
+  final encodedBody = json.encode(body);
+
   if (http == "GET") {
     return jsonDecode((await method(url)).body);
-  } else if (http == "POST") {
-    final encodedBody = json.encode(body);
-    final response = jsonDecode(
+  } else if (http == "POST" || http == "PUT") {
+    return jsonDecode(
         (await method(url, headers: headers, body: encodedBody)).body);
-    return response;
-  } else if (http == "PUT") {
-    final encodedBody = json.encode(body);
-    final response = jsonDecode(
-        (await method(url, headers: headers, body: encodedBody)).body);
-    return response;
+  } else if (http == "DELETE") {
+    return jsonDecode((await method(url, headers: headers)).body);
   }
   return "Error http method";
 }
@@ -33,4 +30,8 @@ dynamic methodPost(body, path) async {
 
 dynamic methodPut(body, path) async {
   return makeHttpRequest(http.put, body, path, "PUT");
+}
+
+dynamic methodDelete(path) async {
+  return makeHttpRequest(http.delete, {}, path, "DELETE");
 }

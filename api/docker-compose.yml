@@ -1,6 +1,21 @@
-version: "3.9"
+networks:
+  expense_api_network:
+    driver: bridge
 
 services:
+  expense_api:
+    container_name: expense_api
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    restart: always
+    networks:
+      - expense_api_network
+
   postgres:
     image: postgres:latest
     container_name: postgres
@@ -13,6 +28,8 @@ services:
     ports:
       - "5432:5432"
     restart: always
+    networks:
+      - expense_api_network
 
   pgadmin:
     image: dpage/pgadmin4:latest
@@ -25,6 +42,8 @@ services:
     depends_on:
       - postgres
     restart: always
+    networks:
+      - expense_api_network
 
 volumes:
   postgres_data:
